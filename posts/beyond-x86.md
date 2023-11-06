@@ -93,10 +93,6 @@ The Golang implementation was simply a vehicle to learn Golang!
 Like the Haskell version, it is an emulation rather than a native implementation.
 Memory is modelled using `map[addr]slot` rather than a flat array of bytes -- this will have a performance cost -- the justification was exploration of Golang _interfaces_.
 
-TODO
-I may well switch to a flat array if I use the Golang version to generate offline memory images, necessary to improve the startup times when running on the 6502/BBC Micro version. More details below.
-
-
 ## 6502 / BBC Micro
 
 This implementation of Quarter Forth targets the 6502 running on the BBC Micro computer.
