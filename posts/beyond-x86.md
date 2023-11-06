@@ -1,77 +1,79 @@
 
-# Beyond x86
+# Quarter Forth beyond x86
 
-At the outset of my [Quarter Forth](https://github.com/Nick-Chapman/quarter-forth)
+At the outset of the [Quarter Forth](https://github.com/Nick-Chapman/quarter-forth)
 project, before it was even called _Quarter Forth_,
 there was a single _x86_ implementation.
-Learning to code x86 was one of the motivating reasons for the project.
+Learning to code x86 was one of my motivating reasons for the project.
 
 In those early days, as I began to explore how
 [bootstrapping](2.bootstrap.md) works in Forth,
 I dreamed of porting Quarter Forth to other platforms.
 In particular I wanted an implementation for the
 [MOS Technology 6502](https://en.wikipedia.org/wiki/MOS_Technology_6502)
-architecture, which would run on my
-[BBC Micro computer](https://en.wikipedia.org/wiki/BBC_Micro) -- _The Beeb_ -- the machine from my childhood. I have that implementation now!
+architecture, which would run on the
+[BBC Micro computer](https://en.wikipedia.org/wiki/BBC_Micro) -- _The Beeb_ -- the machine from my childhood. I now have that implementation!
 
-In a [recent project](https://github.com/Nick-Chapman/beeb)
-I explored graphics programming on the Beeb.
-In particular, I wanted to recreate something like the classic
+Earlier this year,
+I explored [graphics programming](https://github.com/Nick-Chapman/beeb)
+on the Beeb.
+I tried to recreate something like the classic
 [Meteors](https://bbcmicro.co.uk/game.php?id=8) game,
-which was a rather nice port of the arcade classic _Asteroids_.
+which itself was a rather nice port of the arcade classic _Asteroids_.
 I made some good progress, but became bogged down which the sheer effort of coding in Asm.
-My hope in porting Quarter Forth to the Beeb (as well as it being a fun thing to do anyway!), is to pick up my meters-clone project again.
+My hope in porting Quarter Forth to the Beeb (as well as it being a fun thing to do anyway!), is to pick up my _Meteors-clone_ project again.
 
-I currently have four implementations of Quarter Forth:
+There are currently four implementations of Quarter Forth. In chronological development order:
 
 - [x86](https://github.com/Nick-Chapman/quarter-forth) The original implementation.
 - [Haskell](https://github.com/Nick-Chapman/tc-quarter) emulation. With type checker.
 - [Golang](https://github.com/Nick-Chapman/go-quarter) emulation.
 - [6502/BBC Micro](https://github.com/Nick-Chapman/beeb-quarter) implementation.
 
-In a [previous article](3.quarter)
+In the [previous article](3.quarter)
 about the Quarter language, I wrote: _we don't choose to be cryptic just for the sake of it. Our purpose is to allow a full Forth system to be bootstrapped in an Asm-independent way._
-I would claim that so far this has panned our quite well. The amount of kernel code required for each new port has been about as minimal as could be hoped.
+I claim this has panned our quite well so far. The amount of kernel code required for each new port has been about as minimal as could be hoped.
 
-All the existing implementations are 16 bit,
-although this is not a fixed requirement for Quarter Forth.
-The _x86_ and _6502/BBC_ are subroutine threaded.
+All four implementations are 16 bit,
+although this is not a requirement of Quarter Forth.
+The _x86_ and _6502_ implementations are
+[subroutine-threaded](https://en.wikipedia.org/wiki/Threaded_code#Subroutine_threading).
 The Haskell and Golang versions are emulations rather than native code implementations.
-In the following I briefly discuss all the implementations, then focus on some special challenges on the BBC port.
+In the following I briefly discuss each implementation, and then focus on some special challenges for the BBC port.
 
 
 ## x86
 
-This is the original implementations of Quarter Forth
+This is the original implementations of Quarter Forth.
 
 - 16 bit; 64k address space; subroutine threaded
 - Return stack
-  - hardware stack; indexed using register `sp`
-  - located at top of memory `&ffff`, growing downwards
-  - operations: `call`, `ret`, `push`, `pop`
+  - Hardware stack; indexed using register `sp`.
+  - Located at the top of memory `&10000`; growing downwards.
+  - Operations: `call`, `ret`, `push`, `pop`.
 
 - Parameter stack
-  - indexed using register `bp`
-  - located at at `&fbff`, growing downwards (allowing 1k for return stack)
+  - Indexed using register `bp`.
+  - Located at at `&fc00`; growing downwards (allowing 1k for the return stack).
 
-Memory Map. The
-[kernel](https://github.com/Nick-Chapman/quarter-forth/tree/main/x86/kernel.asm)
-is loaded at `&0500` (just above the BIOS).
-It's size is 2905 bytes.
-So the initial location of the heap pointer `here` is `&1059`.
-After the
+Memory Map
+- The [kernel](https://github.com/Nick-Chapman/quarter-forth/tree/main/x86/kernel.asm)
+is loaded at `&500` (just above the BIOS).
+- The kernel size is 2905 bytes,
+giving an initial location for the heap pointer `here` as `&1059`.
+- After the
 [full system](https://github.com/Nick-Chapman/quarter-forth/tree/main/full.list)
-is loaded, including some examples and a snake application,
+is loaded, which includes some examples and a snake application,
 `here` reaches `&3ab0`.
 
 
 ## Haskell
 
-This purpose of the Haskell
+This reason for the Haskell
 implementation was to provide a base to explore offline type-checking of Forth.
 This was a side track project, which I hope to [write](4.typing.md) about in the future.
-It is an emulation rather than a native code implementation.
-And memory is modelled as a `Map` from `Addr` to `Slot`, where `Slot` is defined:
+The Haskell version is an emulation rather than a native code implementation.
+Memory is modelled as a `Map` from `Addr` to `Slot`, where `Slot` is defined:
 
 ```
 data Slot
@@ -82,39 +84,36 @@ data Slot
   | SlotEntry Entry
 ```
 
-This allows tracking the intent of each memory location, which is necessary for the type checking approach taken.
+This allows tracking of the intent of each memory location, which is necessary for the type checking approach taken.
 
 
 ## Go
 
-The Golang implementation of Quarter Forth was a vehicle to learn `Golang`!
+The Golang implementation was simply a vehicle to learn Golang!
 
 Like the Haskell version, this is an emulation rather than a native implementation.
-Memory is modelled using `map[addr]slot` rather than a flat array -- this will have a performance cost -- the justification was my exploration of the _interfaces_ language feature of golang.
-I may well switch to a flat array, in particular if I use the golang version to generate offline memory images, which will be necessary to improve the startup times when running the 6502/BBC Micro version. More details below.
+Memory is modelled using `map[addr]slot` rather than a flat array of bytes -- this will have a performance cost -- the justification was exploration of the Golang _interfaces_.
+I may well switch to a flat array, in particular if I use the Golang version to generate offline memory images, necessary to improve the startup times when running on the 6502/BBC Micro version. More details below.
 
 
-## 6502 / BBC
+## 6502 / BBC Micro
 
 This implementation of Quarter Forth targets the 6502 running on the BBC Micro computer.
 
 - 16 bit; 64k address space; subroutine threaded
 - Return stack
-    - hardware stack; indexed using (hidden) register `S`
-    - located in page-1 of memory (no choice) , growing downwards
-    - operations: `jsr`, `rts`, `pha`, `pla`
+    - Hardware stack; indexed using (hidden) register `S`.
+    - Located in page-1 of memory (no choice); growing downwards.
+    - Operations: `jsr`, `rts`, `pha`, `pla`.
 
 - Parameter stack
-    - indexed using (user) register `X`
-    - located in 0-page memory, from `&90`, growing downwards
+    - Indexed using (user) register `X`.
+    - Located in 0-page memory, from `&90`; growing downwards.
 
-Memory Map:
-
-- variables and parameter stack in zero-page
-- return stack in page-1
-- kernel loaded at `&1200`
-- initial `here` at `&1b0b`
-- full system `here` at `&3cfe`
+Memory Map
+- The [kernel](https://github.com/Nick-Chapman/beeb-quarter/tree/main/src/kernel.asm) is loaded at `&1200`.
+- Initial `here` at `&1b0b`.
+- Full system `here` at `&3cfe`.
 
 ### Status of the Beeb Port
 
@@ -141,7 +140,7 @@ Each system will enable access to the Forth source code in a host specific way. 
 When the system starts, the source code is read using the `key` primitive, character by character until it runs out, whereupon `key` switches to reading from the operator's keyboard. In a very real sense it is as if the source code was directly typed into the system, automatically, on startup.
 
 This is all well and good for the x86 implementation.
-When using the Qemu emulation it takes just a second to boot the full system.
+When using the `qemu` emulator it takes just a second to boot the full system.
 When running on bare metal it is even quicker: Just the blink of an eye.
 
 But the BBC Micro is not so quick.
@@ -205,7 +204,7 @@ These 7 bytes are take by two three-byte `jsr` (_jump-subroutine_) instructions 
 We can reduce this 7 bytes to 5 bytes by using a_direct-threading_ or _indirect-threading_ execution model,
 instead of subroutine-threading. But this requires we pay an extra 2 bytes per definition (so no gain here!) and there are time trade offs.
 
-But anyway, we are focusing here on the dictionary header costs. What are these for the `square` example? In general this is implementation dependent, but in my current implementation (both BBC and x86) we take 7 bytes for the `square` name string (which includes a null terminator), and 5 bytes for the dictionary header: a 2-byte pointer to the name string, a 2-byte pointer to the previous dictionary entry, and one final byte for the immediate and other flags.
+But anyway, we are focusing here on the dictionary header costs. What are these for the `square` example? In general this is implementation dependent, but in the current implementation (both BBC and x86) we take 7 bytes for the `square` name string (which includes a null terminator), and 5 bytes for the dictionary header: a 2-byte pointer to the name string, a 2-byte pointer to the previous dictionary entry, and one final byte for the immediate and other flags.
 
 In total the header consumes 12 bytes, for just 7 bytes of executable code. Not great.
 Traditional Forths avoid the string terminating null byte by making use of a _counted string_ representation. Also, the _name-pointer_ and _flags-byte_ are often combined into a single _name-offset/flags_ byte. Thus making the overall header or our `square` example be just 9 bytes.
