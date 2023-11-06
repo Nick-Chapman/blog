@@ -118,7 +118,7 @@ Memory Map:
 
 ### Status of the Beeb Port
 
-The full quarter system is now up and running, including buffered line entry, memory debugging: `dump` and `xxd`, and disassembly: `see`, `see-all`.
+The full Quarter Forth system is now up and running on the Beeb. Including buffered line entry, memory debugging: `dump` and `xxd`, and disassembly: `see`, `see-all`.
 Running both in the [b-em](https://github.com/stardot/b-em) emulator,
 and on real hardware.
 The implementation is a work-on-progress, so the precise details given above regarding size and memory layout are in flux, but already we can see there is a problem. In fact there are two problems.
@@ -132,12 +132,12 @@ The implementation is a work-on-progress, so the precise details given above reg
 Obviously it's going to be slow to run on a 40 year old machine.
 But the problem is more specific than that...
 
-A Quarter Forth system is composed of a host specific kernel (say _x86_ or _6502_) and a codebase, made up of Quarter code and Forth code.
+A native Quarter Forth system is composed of a host specific kernel (_x86_ or _6502_) and a codebase, made up of Quarter code and Forth code.
 The kernel contains about 60 primitives, directly coded in the host Asm.
 The remainder of the system (the majority) is compiled at startup,
 before the operator gets to type even a single character at the system prompt.
 
-Each system will enable access to the Forth source code in a host specific way. For both the x86 and 6502/BBC implementations, the source code is embedded in the kernel binary image.
+Each system will enable access to the Forth source code in a host specific way. For both the x86 and 6502 implementations, the source code is embedded in the kernel binary image.
 When the system starts, the source code is read using the `key` primitive, character by character until it runs out, whereupon `key` switches to reading from the operator's keyboard. In a very real sense it is as if the source code was directly typed into the system, automatically, on startup.
 
 This is all well and good for the x86 implementation.
@@ -145,34 +145,33 @@ When using the Qemu emulation it takes just a second to boot the full system.
 When running on bare metal it is even quicker: Just the blink of an eye.
 
 But the BBC Micro is not so quick.
-Running the 6502 microprocessor at 2 MhZ,
-it takes about two and a half minutes to boot Quarter Forth.
-For development, I can run the emulator at about 10x speed, so reducing startup to just 15 seconds. But it is not ideal.
+Running its 6502 microprocessor at 2 MhZ,
+it takes about two and a half minutes to boot a Quarter Forth system.
+For development, we can run the _b-em_ emulator at about 10x speed, so reducing startup to just 15 seconds or so. But it is not ideal.
 
-But there is an easy solution to this problem. We can compile the system ahead of time, and embed the image of the compiled code directly in the kernel binary, rather than the source code. This should completely minimize the startup time on the BBC. The only time remaining should just be what it takes to load the image from disk. About 3 or 4 seconds.
+But there is an easy solution to this problem. We can compile the system ahead of time, and embed the image of the compiled code directly in the kernel binary, rather than embedding the source code. This should completely minimize the startup time on the BBC. The only time remaining should being what it takes to load the image from disk. About 2 or 3 seconds.
 
 
 #### Too big
 
 Unlike the x86 implementation we do not have the full 64k address space at our disposal.
-The BBC Micro has only 32k RAM (from 0 to `&8000`). The top 32k of the address space is ROM, which contains the machine operating system (`MOS`) and the builtin BASIC system.
-Also, the BBC kernel is loaded a lot higher in memory (`&1200`) than it was for the x86 version (`&500`). On the BBC, below `&1200` is working memory used by the MOS and BASIC. It is possible that some of this can be reclaimed, but for now `&1200` seems as low as we can go.
+Firstly, the BBC Micro has only 32k RAM (from 0 to `&8000`). The top 32k of the address space is ROM containing the machine operating system (`MOS`) and the builtin BASIC interpreter.
+Secondly, the BBC kernel is loaded a lot higher up in memory (`&1200`) than it was for the x86 version (`&500`). On the BBC, below `&1200` is working memory used by the MOS and BASIC. It is possible that some of this can be reclaimed, but for now `&1200` seems as low as we can go.
 
-So do we have the fully range from `&1200` to `&8000` (27.5k) at our disposal?
-No.
-This must be shared with screen memory.
-Exactly how much memory is dedicated to the screen depends on the screen mode we are running in.
+So do we have the ful range from `&1200` to `&8000` (27.5k) at our disposal?
+No. This must be shared with screen memory.
+Exactly how much memory is dedicated to the screen depends on which screen mode we are running in.
 
-Fortunately, the BBC has one very frugal screen mode: the so called
+Fortunately the BBC has one very frugal screen mode: the so-called
 [Mode-7](https://beebwiki.mdfs.net/MODE_7).
 This is a text mode, running at 40 columns by 25 rows;
 each character taking just one byte.
-When running in Mode 7, the screen memory starts at `&7c00`
-so our 27.5 K just got cut to 26.5k.
+This is the mode which the BBC boots-up in.
+When running in Mode-7, the screen memory starts at `&7c00`
+so our 27.5k just got cut to 26.5k.
 
-However, to do some graphics programming we need to switch
-[mode](https://beebwiki.mdfs.net/MODE)
-to one of BBC's graphics modes.
+However, to do graphics programming we need to switch
+to one of BBC's graphic [modes](https://beebwiki.mdfs.net/MODE).
 Probably Mode-1 would be suitable for Meteors.
 But with a resolution of 320x256 pixels, and four colours,
 this takes up a full 20k of RAM for the screen memory.
@@ -186,34 +185,37 @@ the system crashes as screen overlaps with out executable code
 
 We need to find a way to be more frugal with memory. Some ideas:
 
-- find a way to use ram below `&1200`
-- reduce the size of the ASM kernel
-- reduce the size of the forth system, discarding features we don't need.
-- reclaim memory from the forth system which is only required at compile time.
+- Use memory below `&1200`.
+- Reduce the size of the BBC Asm kernel.
+- Reduce the size of the forth system, discarding features we don't need.
+- Reclaim memory from the forth system which is only required at compile time.
 
-The final idea above follows the realization that much of the memory used by a forth system is used solely to implement the system dictionary structure.
-This dictionary is required when we type words as the operator prompt, and when we compile new definitions using the colon compiler, but when our graphics application begins to run, we wont need either of these features.
-Dictionary headers take a lot of space. Imagine a simple definition, for example:
+The final idea above follows the realization that much of the memory used by a forth system is solely to implement the dictionary structure.
+The dictionary is required when we type words at the operator prompt, and when we compile new 
+definitions using the colon compiler. But when an application begins to run, we wont need either of these features.
+
+Dictionary headers take a lot of space. For example:
+
 ```
 : square  dup * ;
 ```
-Using subroutine threading, the executable code takes just 7 bytes. This is the same on both 6502 and x86.
+
+Using _subroutine-threading_, the executable code takes just 7 bytes. This is the same on both 6502 and x86.
 These 7 bytes are take by two three-byte `jsr` (_jump-subroutine_) instructions (`call` on x86), and one single byte `rts` (_return-subroutine_) instruction (`ret` on x86).
-We can reduce this 7 bytes to 5 bytes if we use a direct or indirect threading execution model,
-instead of subroutine threading. But we need to pay a fixed 2 bytes per definition (so no gain here!) and there are time trade offs.
+We can reduce this 7 bytes to 5 bytes by using a_direct-threading_ or _indirect-threading_ execution model,
+instead of subroutine-threading. But this requires we pay an extra 2 bytes per definition (so no gain here!) and there are time trade offs.
 
-But anyway, we are focusing here on the dictionary header costs. What are these for the `square` example? This is implementation dependent, but in my current implementation (both BBC and x86) we take 7 bytes for the `"square"` string (includes a null string terminator), and 5 bytes for the dictionary header: pointer to the name string, pointer to the next-linked dictionary entry, and one final byte for the immediate and other flags.
+But anyway, we are focusing here on the dictionary header costs. What are these for the `square` example? In general this is implementation dependent, but in my current implementation (both BBC and x86) we take 7 bytes for the `square` name string (which includes a null terminator), and 5 bytes for the dictionary header: a 2-byte pointer to the name string, a 2-byte pointer to the previous dictionary entry, and one final byte for the immediate and other flags.
 
-So in total we consume 12 bytes of header, for just 7 bytes of executable code. Not great.
-Traditional Forths will avoid the null byte on the string, by making use of the _counted string_ representation. Also, the name-pointer and flags-byte are often combined into a single _name-offset/flags_ byte. So making the overall header space be just 9 byes.
-However, perhaps we can avoid, or rather reclaim all of the header.
+In total the header consumes 12 bytes, for just 7 bytes of executable code. Not great.
+Traditional Forths avoid the string terminating null byte by making use of a _counted string_ representation. Also, the _name-pointer_ and _flags-byte_ are often combined into a single _name-offset/flags_ byte. Thus making the overall header or our `square` example be just 9 bytes.
+However, we would like to reclaim all the space used for the header.
 
-The idea is to allocate the dictionary header and dictionary entry names in a different part of the memory space, say from `&3000` upwards (where mode1 screen memory will reside), leaving
-just the executable code for the definitions in low memory. Now we just have to worry about keeping the executable code below `&3000`,
-We are happy to give up the dictionary structure when the application starts. Before the application starts, we will remain in mode-7, and as long as out dictionary headers keep below `&7c00`, we will be good.
+The idea is to allocate the dictionary headers in a different part of the memory space, from `&3000` upwards -- where Mode-1 screen memory will reside -- leaving only the executable code in low memory. Now we just have to worry about keeping the executable code below `&3000`.
+We are happy to give up the dictionary structure when the application starts. Before the application starts, we will remain in Mode-7, and as long as our dictionary headers keep below `&7c00`, we will be good.
 
-This scheme will require a small amount of change to the Quarter Forth kernel primitives for dictionary management. Currently a dictionary entry is conflated with the execution token for the compiled code it related to. And the fact that the header directly proceeds the compiled code is relied upon. This will have to change.
-Whether this approach will reclaim enough space form the forth system to be able to write a graphics application is an open question. We will see!
+The new scheme requires a small change to the Quarter Forth kernel primitives for dictionary management. Currently a dictionary entry is conflated with the execution token for the related compiled code, and the implementation relies on the dictionary header directly proceeding the compiled code. This will have to change.
+Whether the new approach will reclaim enough space from the forth system to allow us to write a graphics application is an open question. We will see!
 
 
 ### Next time...
