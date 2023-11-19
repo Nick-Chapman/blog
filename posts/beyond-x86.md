@@ -1,5 +1,5 @@
 
-# Quarter Forth beyond x86
+# Quarter Forth beyond x86 (BBC Micro; 6502)
 
 At the outset of the [Quarter Forth](https://github.com/Nick-Chapman/quarter-forth)
 project, before it was even called _Quarter Forth_,
