@@ -6,4 +6,3 @@
 - [Bootstrapping Forth with Quarter](posts/2.bootstrap.md)
 - [Quarter: A Minimalist Forth](posts/3.quarter.md)
 - [Quarter Forth beyond x86 (BBC Micro; 6502)](posts/beyond-x86.md)
-- [Meteors on the BBC Micro](posts/meteors.md)
