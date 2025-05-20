@@ -9,4 +9,4 @@
 
 ### Barefun Series
 
-- [Why Two Languages](posts/why-two-languages.md)
+- _20th May 2025_ [Why Two Languages?](posts/why-two-languages.md)
