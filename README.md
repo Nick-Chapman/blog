@@ -1,6 +1,6 @@
 # compile; execute
 
-### Posts
+### Quarter Forth Series
 
 - [Down the Forth Rabbit Hole](posts/1.rabbit.md)
 - [Bootstrapping Forth with Quarter](posts/2.bootstrap.md)
