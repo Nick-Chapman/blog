@@ -1,7 +1,7 @@
 
 # Why Two Languages?
 
-During the last couple of months I have been working on a new project, called
+During the last couple of months I have been working on a new project called
 [Barefun](https://github.com/Nick-Chapman/barefun). The idea is to write a small operating system for bare metal x86, using a functional programming language.
 
 Operating systems are traditionally written in a language such as C where all memory is managed explicitly. I want to see if instead we can use a garbage collected language from the ground up. The Garbage Collector will be integral to the OS. My goals are to learn about traditional osdev, whilst exploring some more unusual approaches to compilation and execution. There is no requirement to be compatible with any existing protocol or calling convention. There is no C here. And there is no existing operating system. The point of this project is to _write_ the operating system. And to do so in a nice high level functional language with a standard Hindley-Milner type system. This project is for fun, so if I want to reimplement every piece of the stack, then I can.
@@ -55,18 +55,18 @@ and [others](https://news.ycombinator.com/item?id=40192579).
 This approach targets strict functional languages.
 
 One idea I really like is to use the heap for call frames as well as for closures and data objects. We are going to have a GC heap anyway, so lets use it for everything! Having stack allocated call-frames is commonly promoted for efficiency reasons. (Although [not everyone agrees](https://www.cs.princeton.edu/~appel/papers/45.pdf)). But by avoiding the stack entirely, even if it comes with some performance hit, we open the door to interesting approaches for the execution model. And not having a stack makes some things MUCH simpler:
-Currency, and getting [_safe-for-space-complexity_](https://flint.cs.yale.edu/flint/publications/escc.html)
+Conurrency, and getting [_safe-for-space-complexity_](https://flint.cs.yale.edu/flint/publications/escc.html)
 correct. I plan to write more about this in a future article.
 
 I am sure it would also be pretty cool to use a pure/non-strict/lazy functional language to write an operating system from the ground-up. But sometimes you've just gotta do what you know!
 
 ### Implementing a compiler in a language different from that being compiled reduces complexity
 
-Bare with me on this one. Object language choices are independent from implementation language choices. I can use Haskell for implementation, and make use of any feature or syntactic convenience I want without worrying that my compiler will have to support those features. I can keep my object language (ocaml subset) as small as possible. Syntactically and Semantically. Only increasing the subset in response to real needs driven by trying to code the operating system in that language.
+Bare with me on this one. Object language choices getto be independent from implementation language choices. I can use Haskell for implementation, and make use of any feature or syntactic convenience I want without worrying that my compiler will also have to support those features. I can keep my object language (ocaml subset) as small as possible. Syntactically and Semantically. Only increasing the subset in response to real needs driven by trying to code the operating system in that language.
 
 ### You don't always need to be self hosting
 
-Maybe one day it would be fun to explore self hosting, but currently my focus is for off-line development of the OS. My current target architecture is x86 real mode (16 bit) which is tiny. But I still get a development environment with modern luxuries, such as: emacs, haskell, ocaml and dune.
+Maybe one day it would be fun to explore self hosting, but currently my focus is for off-line development of the OS. My current target architecture is x86 real mode (16 bit) which is tiny. But I still get a development environment with modern luxuries such as: emacs, haskell, ocaml and dune.
 
 ### You don't always have to dogfood
 
