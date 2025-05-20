@@ -19,7 +19,7 @@ So at least restricting myself to _just_ writing a compiler for a subset of an e
 
 _But why have I decided to write the compiler for barefun in haskell and not in barefun/ocaml?_
 
-This article is a justification for why this this is not quite as silly a decision as it might seem.
+This article is a justification for why this is not quite as silly a decision as it might seem.
 
 - I love Ocaml and Haskell.
 - Haskell is a great language for writing a compiler.
@@ -29,25 +29,25 @@ This article is a justification for why this this is not quite as silly a decisi
 - You don't always need to be self hosting.
 - You don't always have to dogfood.
 
-### I love Ocaml and Haskell.
+### I love Ocaml and Haskell
 
 I have commercial experience in both languages. I have used both for my own projects in the past, although recently I am more likely to use Haskell. This project provides satisfaction for both passions. I also enjoy low level assembly coding, but doing anything substantial is so error prone. If only we had a high level language with a decent type system and automatic memory management which would compile to the assembly code we want....
 
 
-### Haskell is a great choice for writing a compiler.
+### Haskell is a great choice for writing a compiler
 
 A compiler is best structured as a pipeline of pure transformations. I don't particularly care about laziness,
 [but laziness kept haskell pure](https://stackoverflow.com/questions/31477074/how-lazy-evaluation-forced-haskell-to-be-pure)
 and I do care about purity. Purity makes refactoring just work. I want to develop my compiler in a pure language. I don't want state. Or perhaps I should say: I am happy for all state to be mediated by monadic types, such as IO or my own compilation monads. Haskell also has lots of syntactic conveniences which make coding a joy. It's not the quickest to compile; but it's ok.
 
-### Ocaml could be a great language for writing low level code.
+### Ocaml could be a great language for writing low level code
 
 [Other people think so.](https://mirage.io/)
-I want to embrace the idea of using garbage collection everywhere, while still allowing mutable data-structures for deep programmer control. A balance of convenience and performance. Use of a strict functional language allows the programmer a simple mental model of execution. We get runtime memory safely. And we get a programming language with all the standard functional loveliness: specifically a decent type system including polymorphism, variant types, and inference.
+I want to embrace the idea of using garbage collection everywhere, while still allowing mutable data-structures for deep programmer control. A balance of convenience and performance. Use of a strict functional language allows the programmer a simple mental model of execution. We get runtime memory safety. And we get a programming language with all the standard functional loveliness: specifically a decent type system including polymorphism, variant types, and inference.
 
 _Why don't I also desire purity for the language in which I write my operating system?_ To be honest, I am not exactly sure. It just feels it would be an added burden. Maybe this is wrong; we will see. It would undoubtedly be harder for _me_ to write a compiler for a pure/lazy language. So perhaps I am post-rationalizing.
 
-### I have more experience with compilation techniques for strict functional languages than for lazy.
+### I have more experience with compilation techniques for strict functional languages than for lazy
 
 My approach to compilation is focused on the CPS/ANF style promoted by
 [Appel](https://www.goodreads.com/book/show/2079575.Compiling_with_Continuations)
@@ -62,7 +62,7 @@ I am sure it would also be pretty cool to use a pure/non-strict/lazy functional 
 
 ### Implementing a compiler in a language different from that being compiled reduces complexity
 
-Bare with me on this one. Object language choices getto be independent from implementation language choices. I can use Haskell for implementation, and make use of any feature or syntactic convenience I want without worrying that my compiler will also have to support those features. I can keep my object language (ocaml subset) as small as possible. Syntactically and Semantically. Only increasing the subset in response to real needs driven by trying to code the operating system in that language.
+Bear with me on this one. Object language choices get to be independent from implementation language choices. I can use Haskell for implementation, and make use of any feature or syntactic convenience I want without worrying that my compiler will also have to support those features. I can keep my object language (ocaml subset) as small as possible. Syntactically and Semantically. Only increasing the subset in response to real needs driven by trying to code the operating system in that language.
 
 ### You don't always need to be self hosting
 
