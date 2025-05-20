@@ -6,3 +6,7 @@
 - [Bootstrapping Forth with Quarter](posts/2.bootstrap.md)
 - [Quarter: A Minimalist Forth](posts/3.quarter.md)
 - [Quarter Forth on the BBC Micro](posts/beyond-x86.md)
+
+### Barefun Series
+
+- [Why Two Languages](posts/why-two-languages.md)
