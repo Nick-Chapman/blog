@@ -13,4 +13,4 @@ _November 2023_
 ### Barefun Series
 
 _May 2025_
-- [Why Two Languages?](posts/why-two-languages.md)
+- [Two Languages](posts/why-two-languages.md)

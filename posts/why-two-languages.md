@@ -1,10 +1,10 @@
 
-# Why Two Languages?
+# Two Languages
 
-During the last couple of months I have been working on a new project called
+During the last couple of months, I have been working on a new project called
 [Barefun](https://github.com/Nick-Chapman/barefun). The idea is to write a small operating system for bare metal x86, using a functional programming language.
 
-Operating systems are traditionally written in a language such as C where all memory is managed explicitly. I want to see if instead we can use a garbage collected language from the ground up. The Garbage Collector will be integral to the OS. My goals are to learn about traditional osdev, whilst exploring some more unusual approaches to compilation and execution. There is no requirement to be compatible with any existing protocol or calling convention. There is no C here. And there is no existing operating system. The point of this project is to _write_ the operating system. And to do so in a nice high level functional language with a standard Hindley-Milner type system. This project is for fun, so if I want to reimplement every piece of the stack, then I can.
+Operating systems are traditionally written in a language such as C where all memory is managed explicitly. I want to see if instead we can use a garbage collected language from the ground up. The Garbage Collector will be integral to the OS. My goals are to learn about traditional osdev, whilst exploring some more unusual approaches to compilation and execution. There is no requirement to be compatible with any existing protocol or calling convention. There is no C here. And there is no existing operating system. The point of this project is to _write_ the operating system. And to do so in a nice high-level functional language with a standard Hindley-Milner type system. This project is for fun, so if I want to reimplement every piece of the stack, then I can.
 
 Towards the start of this project, I stumbled into an unusual decision:
 
@@ -19,7 +19,7 @@ So at least restricting myself to _just_ writing a compiler for a subset of an e
 
 _But why have I decided to write the compiler for barefun in haskell and not in barefun/ocaml?_
 
-This article is a justification for why this is not quite as silly a decision as it might seem.
+This article is a justification for why this is not quite as silly a decision as it might seem:
 
 - I love Ocaml and Haskell.
 - Haskell is a great language for writing a compiler.
@@ -54,7 +54,7 @@ My approach to compilation is focused on the CPS/ANF style promoted by
 and [others](https://news.ycombinator.com/item?id=40192579).
 This approach targets strict functional languages.
 
-One idea I really like is to use the heap for call frames as well as for closures and data objects. We are going to have a GC heap anyway, so lets use it for everything! Having stack allocated call-frames is commonly promoted for efficiency reasons. (Although [not everyone agrees](https://www.cs.princeton.edu/~appel/papers/45.pdf)). But by avoiding the stack entirely, even if it comes with some performance hit, we open the door to interesting approaches for the execution model. And not having a stack makes some things MUCH simpler:
+One idea I really like is to use the heap for call frames as well as for closures and data objects. We are going to have a GC heap anyway, so let's use it for everything! Having stack allocated call-frames is commonly promoted for efficiency reasons. (Although [not everyone agrees](https://www.cs.princeton.edu/~appel/papers/45.pdf)). But by avoiding the stack entirely, even if it comes with some performance hit, we open the door to interesting approaches for the execution model. And not having a stack makes some things MUCH simpler:
 Conurrency, and getting [_safe-for-space-complexity_](https://flint.cs.yale.edu/flint/publications/escc.html)
 correct. I plan to write more about this in a future article.
 
@@ -66,7 +66,7 @@ Bear with me on this one. Object language choices get to be independent from imp
 
 ### You don't always need to be self hosting
 
-Maybe one day it would be fun to explore self hosting, but currently my focus is for off-line development of the OS. My current target architecture is x86 real mode (16 bit) which is tiny. But I still get a development environment with modern luxuries such as: emacs, haskell, ocaml and dune.
+Maybe one day it would be fun to explore self hosting, but currently my focus is for off-line development of the OS. My current target architecture is x86 real mode (16 bit) which is tiny. But I still get a development environment with modern luxuries: emacs, haskell, ocaml and dune.
 
 ### You don't always have to dogfood
 
@@ -83,4 +83,4 @@ There are multiple goals for the Barefun project:
 - To have fun.
 
 I hope that embracing different languages for different levels will further these goals.
-In the future I plan to write more about various aspects of this Barefun project. Watch this space.
+In the future, I plan to write more about various aspects of this Barefun project. Watch this space.
