@@ -1,0 +1,32 @@
+
+
+Fp no currying. User controlled multi arg function. Maybe lisp got this right?
+
+No stacks...
+
+Stacks harmful
+
+Tail calls important
+CPS known for ages.
+Neg: call frames in heap.
+Has a cost. Maybe. Maybe small.
+Ref to old papers. Heap vs Stack.
+Lots of upside...
+
+Have GC heap anyway.
+GC off stack is a pain. Easy to leak.
+Simpler uniform representation.
+Concurrency
+Lightweight threads easy.
+No stacks! Call frames in heap.
+User access to continuation.
+Scheduler in user code.
+
+Per thread stacks are a pain.
+How big?
+Too small... overflow
+Too big... waste space.
+Slow to switch?
+Solution. Linked stack segments.
+What is this called in literature?
+In essence, the same as heap allocated call frames.

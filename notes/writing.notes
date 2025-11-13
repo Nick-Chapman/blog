@@ -1,0 +1,40 @@
+
+Next blog: "How to write a compiler?"
+
+"First write an interpreter; then write five more."
+
+segway into blog about compiler pipeline
+
+
+writing
+- milestone 2 on readme (GC + filesystem), in prep for freiend announce, also in prep for blogging
+- list things I want to blog about. start high level overview
+
+write up my paper notes on value representations
+
+calling convention
+
+compile stages
+- detailed doc for what each compilation stage does (see phone for text on globalzation)
+
+rational: things that I want to achieve and are maybe unusual/special
+
+  simple functional langauge (FUN) (statically typed) for low level (OS) programming
+  FUN looks like ocaml (syntactic subset) allowing easy piggy back on Ocaml dev/type-checker
+  own (AoT) compiler for FUN (coded in Haskell)
+  compiler dev by pipeline of stages, each with own interpreter/evaluator to help ensure semantic correctness
+  by default: agressive optimization of FUN (inlining and constant folding/propogation) via normalization (NbE)
+  but with inlining control in user program
+  target baremetal x86 (stretch: maybe 6502 also!)
+  (very) non standard ABI and runtime model
+  no use of stack by user programs (they will be fully CPSed)
+  continuations are allocated in the heap like any other datastructure
+  all memory will be allocated in Garbage collected heap.
+  garbage collector implemented at the OS level (rather like a VM)
+  idea: use of x86 stack pointer for heap allocation
+
+  simple/cheap co-operative concurrency (fibers) -- one of the drivers to have no stack in user code
+
+  big stretch: GC algorithm implemented in user code
+  basic round robin fiber scheduler
+  stretch: scheduler for fibers in user space

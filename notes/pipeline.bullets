@@ -1,0 +1,252 @@
+
+----------------------------------------------------------------------
+Todoist...
+
+Plan. Bullet points. Some organization. Voice transcription. Edit for nice English.
+Audience. Me in 10 years time.
+My novel ideas.
+What I coded.
+What I never got to.
+
+----------------------------------------------------------------------
+
+snappy opening
+first write intrepreter
+then Write 5 interpreters
+
+
+A compiler is best thought of as a pipeline stages. Each stage of the compiler is designed for a specific purpose, doing some work at compile time which would otherwise have to be down at runtime. Between each stage of the pipeline we have an internal representation (IR). We use a different IR at each stage to allow a precise representation of the transforms which have been performed so far. The stage0 IR is the source language AST output by the parser. Each following stage lowers the user program until we reach our target language: x86 ASM at the final stage. Within each stage, all work is perfomed by a single pass. We don't have any stages with iterate to fix point. This makes it easy to be more precise about exactly what is achieved by each stage. The IR for each stage is implemented as a separate type. I have've found attempting to share commonality across IRs makes things more complicated for no gain.
+
+My source language is a statically typed functional programming language (ocaml-like). It has strict execution semantics. It has variant types with pattern matching. Function application and abstraction is curried. We supports simple let-bindings and recursion is explicitly marked. There are built-in types for numbers, characters and strings whereas `unit`, `bool` and `list` are pre-defined variant types.
+
+
+be explicit about no-goals for a project... for me/barefun
+this project not interested to write a type checker. fun, but another day.
+don't want to innovate in type systems
+dint want to innovate in syntax.
+explicit decision to have barefun be a subset of ocaml
+precise details of subset to be discovered as I use barefun to write 'real' examples
+rules:
+every legal barefun is also legal ocaml, with same meaning
+(but not every detail of ocaml syntax is accepted as barefun)
+if a barefun program is accepted by the ocaml type checker
+then the barefun program will have no runtime type errors
+
+in short.
+barefun is a statically typed languages, but I was able to cheat
+and avoid writing type checker
+
+
+dev architecture...
+drive with succession of examples:
+have interpreter for each stage
+throw away work, but worth it.
+the interpreter IS the executable semantics for that stage
+if you dint understand semantics, cant write a compiler
+
+Development is driven using a succession of examples.
+
+
+At each stage of the compiler pipeline we write an interpreter for that stage's IR. 
+
+This might appear throwaway work but rarely worth it temperature is the executable semantics for that stage you don't understand the smarttix he can't write a compiler
+
+At each stage of the pipeline, the IR is a precise description of the lowerrings performed so far i find it best to have a separate i are each stage i don't see any value in trying to share code between files at different stages
+
+
+how to design a pipeline...
+the interpreter for language AST defines the language semantics
+the interpreter for target lang (x86 for me) defines the target semantics
+need to understand how to bridge the gap
+need to understand how execution will proceed at runtime
+
+need to consider at least the following aspects
+
+control
+environment
+memory management
+value representation
+
+
+
+barefun execution model
+
+memory allocation will be managed by garbage collection
+will use heap for use data structure (i.e strings and lists)
+also use heap for function closures.
+
+control. many language implementation use stack for function call and return
+not so barefun
+
+tail call support is critical.
+barefun solution is CPS/ANF program transform so every call is a tail call
+non tail calls via explicit push-continuation
+so barefun function call is jump-with-args.
+barefun function return is jump-to-continuation-with-result
+
+barefun imp has no stack at runtime.
+call frames are all heap allocated -- that's ok we have a heap.
+there are pros and cons to this decision. future article will elaborate.
+primary downside: potentially less efficient to allocate call frame in heap
+upside: simpler GC. no scan stack for roots.
+simpler tail-call opt. everything is a tail call
+simpler call-frame allocation... we already have a heap
+(a call frame is hardly different from a function closure which we must support anyway)
+
+
+
+my compiler pipeline...
+
+- [Stage0]: AST : Abstract Syntax Tree from parser
+- [Stage1]: EXP : Simplified expression language.
+- [Stage2]: NBE : Normalization by Evaluation. (Inlining & Constant Folding).
+- [Stage3]: ANF : A-normal form.
+- [Stage4]: CCF : Closure converted form.
+- [Stage5]: ASM : x86 ASM
+
+code organisation:
+basic idea: code for stageN, is in file StatgeN_TAG.hs
+where TAG is the tag for that stage
+
+In each file are 4 things:
+- Types defining the IR for this stage
+- A pretty-printer for the IR. for dev/debug
+- The interpreter for this IR, i.e. definition of the semantics
+- The compiler for this IR, taking the IR of the previous stage as input
+Exceptions:
+Stage0: there is no compiler from a previous stage. instead we can a parser in a separate file which constructs the Stage 0 AST
+
+Stage5: split over 3 files:
+- ASM: defines types and pretty printer.
+- Emulation: contains the interpreter (quite involved for this stage)
+- Compilation: contains the compiler from previous stage 4
+
+
+
+
+how to dev/test:
+- define core of stage0 rep to allow writing some first example
+- write the example
+- (check the example type checks and can be evaluated as ocaml)
+- write parser for this example
+- pp the stage0 rep.. inspect by eye
+- write the stage0 interpreter
+- run example to get same behaviour as from as ocaml
+
+- define IR for next stage, which is in some measure simpler than the prev stage
+- write PP and interpreter for the stage. can copy/mod stage0 PP and interpreter
+- write the compiler from the prev stage: this is the "production" code that will be in the final compiler pipeline
+- this stage was intended to solve some specific purpose.
+- and you have an idea how to implement that purpose
+- the tight IR for this stage proves that the purpose was achieved.
+- the interpreter for this IR proves that the compiler works.
+- (at least for the examples of which you ran it)
+
+Continue dev along two axis:
+- implement the rest of the compiler phases
+- drive with series of increasing complex examples
+- perhaps more examples will show missing forms in early stage IRs
+- extend IRs as necessary, updating pp/interpreter/compiler
+- propagate the new IR forms to each stage as required
+- resolve new IR forms in appropriate stage
+
+
+
+details for stage0... (AST)
+- AST coming out of parser
+- goal: to represent source language quite faithfully
+- most user typing is just dropped by parser
+- but we do need to know the constructors for user defined variant types
+- hence we have a language with exp/dec
+- often a stage-0 AST would keep more details of user syntax
+- to allow a type checker (written on AST) to report errors better
+- but since I declined to write a type-checker
+- I was able to have a simpler AST
+- electing to perform some simplifications at parse time; normally in sub stage
+- i.e. "if..then..else" --> "match..with true ->..; false->.."
+- i.e. [x;y;z] --> x::y::z::[]
+
+details for stage1... (EXP)
+- EXP just means a minimal expression language
+- goal: minimise language to core concerns. link identifier to binding occurrence
+- not much to do here as trivial transforms done at parse time
+- two things. remove decl sub-language used in AST to rep user type defs
+- variant types are supported by selecting tag values to represent each arm
+- this info must be propagated to construction and match sites.
+- i.e CODE EXAMPLE
+- 2nd thing. add explicit link from identifier to binding site
+- not strictly needed for semantics
+- for useful for dev/debug & provenance info in later comp stage output
+- EXAMPLE:
+
+details for stage2... (NBE)
+- NBE stands for normalization by evaluation
+- goal: maximal inlining and constant propagation
+- in essence: extreme inlining. inline everything.
+- only don't inline when we cant: because of recursive function
+- need full sep article to do this justice.
+- NbE is composition: reflect prog >>= reify
+- via immediate semantic-representation
+- in general, very aggressive rewrite of user program
+- in general, may explode
+- in practise, it doesn't
+
+- In this one stage of the compiler, output IR is very similar to the input
+- for the longest time it was exactly the same.
+- but then NBE stage acquired a second small role
+- collection of multi lambda abstraction and application
+- In AST and EXP, every function def (lambda) and call (application) is unary
+- makes sense as the minimal rep in a curried functional language
+- but it turns out a more efficient execution model requires multi-lam/app
+- collecting these only makes sense after NBE stage
+- easy to collect multi-lam/app in as we reify the output
+- CODE EAMPLE
+
+
+details for stage3... ANF
+- ANF stands for A-Normal form. (go google)
+- this stage implements the barefun approach to runtime control flow
+- goal: make every call a tail call
+- every non-atomic expression in non-tail position is named, and bound with a let-expression
+- the newly introduced let-binding scope over the references
+- this stage (like NBE) before rearranges the user code in a quite an aggressive fashion
+
+
+details for stage4... CCF
+- CCF stands for "closure converted form"
+- this stage implements the barefun approach to environment handling
+- goal: at runtime, we need to know where every variable is located
+- Global, Temporary, Argument to the current code-sequence (function/continuation); In the frame of the current code sequence
+- We run CCF after ANF, because call-frame (continuations) closure are only determined in stage3 ANF
+- we use the simplest flat-model for closure frames
+- any closure which captures zero free variables is hoisted to the top level and is treated as a global
+
+details for stage5
+- ASM: models subset of x86 ASM which is used my barefun compilation
+- delegate the knowledge of x86 encoding to nasm
+- pretty-printer for stage5 produced output which is legal input for nasm
+
+Emulator:
+- when does an interpreter become an emulator?
+- when it models the details of how values are represented at runtime
+- as pointers from memory cell to memory cell
+- the stage 5 emulator also contains a garbage collector
+- to ensure the stage5 compiler generates code which constructs values
+- which satisfy the value representation invariants expected by the GC
+- (I really should document these thoroughly some time)
+
+Compiler:
+- makes choices over register usage and calling conventions
+- contains details for how Barefun primitives are compiled to ASM
+- a few primitives dispatch to routines which must exists at runtime,
+- meanly the impl will be replicated in the stage5 emulator, and hand coded ASM
+
+
+Summary
+Conclusion.
+Why have I even written all this!
+
+Writing a compiler is difficult.
+A pipeline of stages, each with a specific goal helps tame complexity.
+Writing an interpreter at each stage, whilst throw away, is critical for dev and testing
+
